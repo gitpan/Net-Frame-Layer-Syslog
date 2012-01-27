@@ -4,7 +4,7 @@
 package Net::Frame::Layer::Syslog;
 use strict; use warnings;
 
-our $VERSION = '1.00';
+our $VERSION = '1.01';
 
 use Net::Frame::Layer qw(:consts :subs);
 use Exporter;
@@ -105,15 +105,15 @@ __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
 #no strict 'vars';
 use Socket;
-use Socket6;
+use if $] < 5.014, "Socket6";
 use Sys::Hostname;
 
 $Net::Frame::Layer::UDP::Next->{514} = "Syslog";
 
 sub new {
-   my $time = getTime();
-   my $host = getHost();
-   my $tag  = getTag();
+   my $time = _getTime();
+   my $host = _getHost();
+   my $tag  = _getTag();
 
    shift->SUPER::new(
       facility  => NF_SYSLOG_FACILITY_LOCAL7,
@@ -127,9 +127,9 @@ sub new {
 }
 
 sub message {
-   my $time = getTime();
-   my $host = getHost();
-   my $tag  = getTag();
+   my $time = _getTime();
+   my $host = _getHost();
+   my $tag  = _getTag();
 
    shift->SUPER::new(
       msg => "<190>$time $host $tag syslog message",
@@ -303,7 +303,7 @@ sub priorityNtoa {
    }
 }
 
-sub getTime {
+sub _getTime {
    my @month = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
    my @time = localtime();
    my $ts =
@@ -316,7 +316,7 @@ sub getTime {
    return $ts
 }
 
-sub getHost {
+sub _getHost {
    my $hostname = 'localhost';
    my @getaddr = getaddrinfo(Sys::Hostname::hostname, 0);
    if ((($#getaddr + 1) % 5) == 0) {
@@ -332,7 +332,7 @@ sub getHost {
    return $hostname
 }
 
-sub getTag {
+sub _getTag {
    my $name  = $0;
    if ($name =~ /.+\/(.+)/) {
       $name = $1;
