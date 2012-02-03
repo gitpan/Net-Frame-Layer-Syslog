@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::Frame::Layer::Syslog.
 
+1.02_1 Mon Jan 30 17:48:36 EST 2012
+   - Socket / Socket6 woes with getaddrinfo Perl 5.12 vs 5.14
+
 1.02 Thu Jan 26 17:48:36 EST 2012
    - Windows + CPAN = withoutworldwriteables
 

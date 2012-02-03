@@ -4,7 +4,7 @@
 package Net::Frame::Layer::Syslog;
 use strict; use warnings;
 
-our $VERSION = '1.02';
+our $VERSION = '1.02_1';
 
 use Net::Frame::Layer qw(:consts :subs);
 use Exporter;
@@ -104,8 +104,10 @@ __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
 #no strict 'vars';
-use Socket;
-use if $] < 5.014, "Socket6";
+use if $] <  5.014, "Socket" => qw(unpack_sockaddr_in IPPROTO_TCP AF_UNSPEC AF_INET);
+use if $] <  5.014, "Socket6" => qw(inet_ntop unpack_sockaddr_in6);
+use if $] <  5.014, "Socket::GetAddrInfo" => qw(:newapi getaddrinfo);
+use if $] >= 5.014, "Socket" => qw(getaddrinfo inet_ntop unpack_sockaddr_in unpack_sockaddr_in6 IPPROTO_TCP AF_UNSPEC AF_INET);
 use Sys::Hostname;
 
 $Net::Frame::Layer::UDP::Next->{514} = "Syslog";
@@ -198,40 +200,40 @@ sub unpack {
    if ($payload =~ /$Cregex/) {
 
       my $priority  = $1;
-#      my $timestamp = $2 || '0';
-#      my $hostname  = $3 || '0';
+      my $timestamp = $2 || '0';
+      my $hostname  = $3 || '0';
       my $message   = $4;
       my ($facility, $severity) = priorityNtoa($priority);
 
       $self->facility($facility);
       $self->severity($severity);
-#      $self->timestamp($timestamp);
+      $self->timestamp($timestamp);
 
-#      $hostname =~ s/\s+//;
-#      $self->host($hostname);
+      $hostname =~ s/\s+//;
+      $self->host($hostname);
 
-#      my %chars;
-#      $chars{bracket} = index($message,"]");
-#      $chars{colon}   = index($message,":");
-#      $chars{space}   = index($message," ");
-#      my $win = 0;
-#      foreach my $ch (sort {$chars{$b} cmp $chars{$a}} keys %chars) {
-#          if ($chars{$ch} > 0) {
-#             $win = $ch
-#          }
-#      }
-#      if ($chars{$win} > 0) {
-#         my $tag     = substr($message, 0, $chars{$win}+1) || '0';
-#         my $content = substr($message, $chars{$win}+1)    || '0';
-#         $self->tag($tag);
-#         $self->content($content)
-#      } else {
-#          $self->tag('0');
-#          $self->content($message)
-#      }
+      my %chars;
+      $chars{bracket} = index($message,"]");
+      $chars{colon}   = index($message,":");
+      $chars{space}   = index($message," ");
+      my $win = 0;
+      foreach my $ch (sort {$chars{$b} cmp $chars{$a}} keys %chars) {
+          if ($chars{$ch} > 0) {
+             $win = $ch
+          }
+      }
+      if ($chars{$win} > 0) {
+         my $tag     = substr($message, 0, $chars{$win}+1) || '0';
+         my $content = substr($message, $chars{$win}+1)    || '0';
+         $self->tag($tag);
+         $self->content($content)
+      } else {
+          $self->tag('0');
+          $self->content($message)
+      }
 
-       my $msg = substr $payload, index($payload,">")+1;
-       $self->msg($msg)
+      my $msg = substr $payload, index($payload,">")+1;
+      $self->msg($msg)
 
    } else {
       $self->facility(undef);
@@ -318,17 +320,20 @@ sub _getTime {
 
 sub _getHost {
    my $hostname = 'localhost';
-   my @getaddr = getaddrinfo(Sys::Hostname::hostname, 0);
-   if ((($#getaddr + 1) % 5) == 0) {
+   my %hints = (
+      family => AF_UNSPEC,
+      protocol => IPPROTO_TCP
+   );
+   my ($err, @getaddr) = getaddrinfo(Sys::Hostname::hostname, undef, \%hints);
+   if (defined($getaddr[0])) {
       my $address;
-      if ($getaddr[0] == AF_INET) {
-         $address = (unpack_sockaddr_in($getaddr[3]))[1]
+      if ($getaddr[0]->{family} == AF_INET) {
+         $address = unpack_sockaddr_in($getaddr[0]->{addr})
       } else {
-         $address = (unpack_sockaddr_in6($getaddr[3]))[1]
+         $address = unpack_sockaddr_in6($getaddr[0]->{addr})
       }
-      $hostname = inet_ntop($getaddr[0], $address);
+      $hostname = inet_ntop($getaddr[0]->{family}, $address)
    }
-
    return $hostname
 }
 

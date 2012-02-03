@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Net-Frame-Layer-Syslog
-version:            1.02
+version:            1.02_1
 abstract:           Syslog layer object
 author:
     - Michael Vincent <vin at vinsworld dot com>
@@ -11,7 +11,8 @@ configure_requires:
 build_requires:
     ExtUtils::MakeMaker:  0
 requires:
-    Net::Frame:  1.09
+    Net::Frame:           1.09
+    Socket::GetAddrInfo:  0.21
 no_index:
     directory:
         - t

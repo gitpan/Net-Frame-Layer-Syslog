@@ -27,8 +27,8 @@ my %packet;
 $eth    = Net::Frame::Layer::ETH->new(src=>'C4:17:FE:12:7D:75',dst=>'58:6d:8f:78:ad:40');
 $ipv4   = Net::Frame::Layer::IPv4->new(id=>16383,src=>'192.168.10.100',dst=>'8.8.8.8',protocol=>NF_IPv4_PROTOCOL_UDP);
 $udp    = Net::Frame::Layer::UDP->new(dst=>514,src=>52001);
-$udpPay = Net::Frame::Layer::UDP->new(dst=>514,src=>52001,payload=>pack "H*", '3c3139303e4a616e2032332031343a33323a353420666538303a3a656461343a616537333a666565383a626366612030382d7379736c6f67636f6d706172652e745b323538385d207379736c6f67206d657373616765');
-$syslog = Net::Frame::Layer::Syslog->new(timestamp=>'Jan 23 14:32:54',tag=>'08-syslogcompare.t[2588]');
+$udpPay = Net::Frame::Layer::UDP->new(dst=>514,src=>52001,payload=>pack "H*", '3c3139303e4a616e2032332031343a33323a3534206c6f63616c686f73742030382d7379736c6f67636f6d706172652e745b323538385d207379736c6f67206d657373616765');
+$syslog = Net::Frame::Layer::Syslog->new(timestamp=>'Jan 23 14:32:54',host=>'localhost',tag=>'08-syslogcompare.t[2588]');
 
 skip ($NO_HAVE_NetFrameSimple,
 sub {
