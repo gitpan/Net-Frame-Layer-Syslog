@@ -106,7 +106,7 @@ __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 #no strict 'vars';
 use if $] <  5.014, "Socket" => qw(unpack_sockaddr_in IPPROTO_TCP AF_UNSPEC AF_INET);
 use if $] <  5.014, "Socket6" => qw(inet_ntop unpack_sockaddr_in6);
-use if $] <  5.014, "Socket::GetAddrInfo" => qw(:newapi getaddrinfo);
+use if $] <  5.014, "Socket::GetAddrInfo" => qw(getaddrinfo);
 use if $] >= 5.014, "Socket" => qw(getaddrinfo inet_ntop unpack_sockaddr_in unpack_sockaddr_in6 IPPROTO_TCP AF_UNSPEC AF_INET);
 use Sys::Hostname;
 
