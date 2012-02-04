@@ -4,7 +4,7 @@
 package Net::Frame::Layer::Syslog;
 use strict; use warnings;
 
-our $VERSION = '1.02_1';
+our $VERSION = '1.03';
 
 use Net::Frame::Layer qw(:consts :subs);
 use Exporter;

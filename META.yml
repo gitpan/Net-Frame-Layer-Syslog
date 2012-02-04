@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Net-Frame-Layer-Syslog
-version:            1.02_1
+version:            1.03
 abstract:           Syslog layer object
 author:
     - Michael Vincent <vin at vinsworld dot com>
