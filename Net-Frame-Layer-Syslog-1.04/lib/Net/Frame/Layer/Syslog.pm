@@ -1,10 +1,10 @@
 #
-# $Id: Syslog.pm 49 2009-05-31 13:15:34Z VinsWorldcom $
+# $Id: Syslog.pm 49 2012-11-19 13:15:34Z VinsWorldcom $
 #
 package Net::Frame::Layer::Syslog;
 use strict; use warnings;
 
-our $VERSION = '1.03';
+our $VERSION = '1.04';
 
 use Net::Frame::Layer qw(:consts :subs);
 use Exporter;
@@ -104,10 +104,13 @@ __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
 #no strict 'vars';
-use if $] <  5.014, "Socket" => qw(unpack_sockaddr_in IPPROTO_TCP AF_UNSPEC AF_INET);
-use if $] <  5.014, "Socket6" => qw(inet_ntop unpack_sockaddr_in6);
-use if $] <  5.014, "Socket::GetAddrInfo" => qw(getaddrinfo);
-use if $] >= 5.014, "Socket" => qw(getaddrinfo inet_ntop unpack_sockaddr_in unpack_sockaddr_in6 IPPROTO_TCP AF_UNSPEC AF_INET);
+use Socket qw(inet_ntoa AF_INET IPPROTO_TCP);
+
+#my $AF_INET6 = eval { Socket::AF_INET6() };
+my $AF_UNSPEC = eval { Socket::AF_UNSPEC() };
+#my $AI_NUMERICHOST = eval { Socket::AI_NUMERICHOST() };
+my $NI_NUMERICHOST = eval { Socket::NI_NUMERICHOST() };
+
 use Sys::Hostname;
 
 $Net::Frame::Layer::UDP::Next->{514} = "Syslog";
@@ -320,19 +323,25 @@ sub _getTime {
 
 sub _getHost {
    my $hostname = 'localhost';
-   my %hints = (
-      family => AF_UNSPEC,
-      protocol => IPPROTO_TCP
-   );
-   my ($err, @getaddr) = getaddrinfo(Sys::Hostname::hostname, undef, \%hints);
-   if (defined($getaddr[0])) {
-      my $address;
-      if ($getaddr[0]->{family} == AF_INET) {
-         $address = unpack_sockaddr_in($getaddr[0]->{addr})
-      } else {
-         $address = unpack_sockaddr_in6($getaddr[0]->{addr})
+
+   if ($Socket::VERSION >= 1.94) {
+      my %hints = (
+         family => $AF_UNSPEC,
+         protocol => IPPROTO_TCP
+      );
+      my ($err, @getaddr) = Socket::getaddrinfo(Sys::Hostname::hostname, undef, \%hints);
+      if (defined($getaddr[0])) {
+         my ($err, $address) = Socket::getnameinfo($getaddr[0]->{addr}, $NI_NUMERICHOST);
+         if (defined($address)) {
+            $hostname = $address;
+            $hostname =~ s/\%(.)*$// # remove %ifID if IPv6
+         }
       }
-      $hostname = inet_ntop($getaddr[0]->{family}, $address)
+   } else {
+      my @gethost = gethostbyname(Sys::Hostname::hostname);
+      if (defined($gethost[4])) {
+         $hostname = inet_ntoa($gethost[4])
+      }
    }
    return $hostname
 }

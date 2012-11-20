@@ -14,3 +14,4 @@ t/07-syslog.t
 t/08-syslogcompare.t
 t/10-syslogdecode.t
 META.yml                                 Module meta-data (added by MakeMaker)
+META.json                                Module JSON meta-data (added by MakeMaker)
